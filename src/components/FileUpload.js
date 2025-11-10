@@ -41,6 +41,11 @@ function FileUpload({ onUploadFinished }) {
           setProgress(100);
           setFile(null);
           onUploadFinished?.(url);
+          try {
+            window.dispatchEvent(new Event("files-changed"));
+          } catch (e) {
+            console.warn("Could not dispatch files-changed event", e);
+          }
         } catch (e) {
           console.error(e);
           setError("Could not get file URL after upload.");
@@ -75,7 +80,7 @@ function FileUpload({ onUploadFinished }) {
       </div>
 
       {uploading && (
-        <div className="mt-3">
+        <div className="mt-5">
           <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
             <div className="h-2 bg-indigo-500" style={{ width: `${progress}%` }} />
           </div>

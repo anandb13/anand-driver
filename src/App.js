@@ -1,8 +1,7 @@
-// ...existing code...
 import { useState, useEffect } from "react";
 import { auth } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import Auth from "./components/Auth";
+import Auth from "./components/auth/Auth";
 import FileUpload from "./components/FileUpload";
 import FileList from "./components/FileList";
 
@@ -29,14 +28,14 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       {user ? (
-        <div className="py-10 px-4 max-w-4xl mx-auto">
+        <div className="py-10 px-4 max-w-5xl mx-auto">
           <header className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                MD
+                AD
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">My Cloud Drive</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Anand Drive</h1>
                 <p className="text-sm text-gray-500">Store and share your files</p>
               </div>
             </div>
@@ -58,7 +57,7 @@ function App() {
           </header>
 
           <main>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div>
                 <FileUpload onUploadFinished={() => {}} />
               </div>
@@ -71,7 +70,7 @@ function App() {
         </div>
       ) : (
         <div className="flex items-center justify-center min-h-screen px-4">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-4xl">
             <Auth />
           </div>
         </div>
@@ -81,4 +80,3 @@ function App() {
 }
 
 export default App;
-// ...existing code...

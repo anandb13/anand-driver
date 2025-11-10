@@ -45,7 +45,7 @@ function App() {
             {user && (
               <div className="flex items-center gap-3">
                 <div className="text-sm text-gray-700 mr-2 hidden sm:block">
-                  Signed in as <span className="font-medium">{user.email}</span>
+                  Signed in as: <span className="font-medium">{user.email}</span>
                 </div>
                 <button
                   onClick={handleLogout}

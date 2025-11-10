@@ -8,7 +8,6 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState({});
   const [totalSize, setTotalSize] = useState(0);
-  // const MAX_STORAGE = 200 * 1024 * 1024;
 
   const getProgressColor = (percentage) => {
     if (percentage > 90) return "bg-red-600";

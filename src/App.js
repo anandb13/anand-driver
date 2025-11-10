@@ -8,6 +8,8 @@ import FileList from "./components/FileList";
 function App() {
   const [user, setUser] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [totalSize, setTotalSize] = useState(0);
+  const MAX_STORAGE = 200 * 1024 * 1024;
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
@@ -59,11 +61,18 @@ function App() {
           <main>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div>
-                <FileUpload onUploadFinished={() => {}} />
+                <FileUpload 
+                  totalSize={totalSize}
+                  MAX_STORAGE={MAX_STORAGE}
+                  onUploadFinished={() => window.dispatchEvent(new Event("files-changed"))} 
+                />
               </div>
 
               <div>
-                <FileList />
+                <FileList
+                  onStorageUpdate={(size) => setTotalSize(size)}
+                  MAX_STORAGE={MAX_STORAGE}
+                />
               </div>
             </div>
           </main>

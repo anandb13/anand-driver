@@ -2,12 +2,19 @@ import { useEffect, useState } from "react";
 import { auth, storage } from "../firebase";
 import { ref, listAll, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 
-function FileList() {
+function FileList({ onStorageUpdate, MAX_STORAGE }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState({});
   const [totalSize, setTotalSize] = useState(0);
+  // const MAX_STORAGE = 200 * 1024 * 1024;
+
+  const getProgressColor = (percentage) => {
+    if (percentage > 90) return "bg-red-600";
+    if (percentage > 70) return "bg-yellow-500";
+    return "bg-green-600";
+  };
 
   const fetchFiles = async () => {
     setError("");
@@ -39,6 +46,9 @@ function FileList() {
 
       setFiles(fileList);
       setTotalSize(total);
+      if (onStorageUpdate) {
+        onStorageUpdate(total);
+      }
     } catch (err) {
       console.error(err);
       setError("Could not load files.");
@@ -92,15 +102,36 @@ function FileList() {
         <h3 className="text-lg font-medium text-gray-800">Your files</h3>
         <button
           onClick={fetchFiles}
-          className="text-sm px-3 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50"
+          className="text-sm px-3 py-1"
           disabled={loading}
         >
-          {loading ? "Refreshing…" : "Refresh"}
+          <img
+            src="/refresh.svg"
+            alt="Refresh"
+            className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
+          />
         </button>
       </div>
-      <p className="text-sm text-gray-600 mb-3">
-        Total Used: <strong>{formatBytes(totalSize)}</strong>
-      </p>
+      <div className="mb-4">
+        <p className="text-sm font-medium text-gray-700">
+          Storage Used: {formatBytes(totalSize)} / {formatBytes(MAX_STORAGE)}
+        </p>
+
+        <div className="w-full h-3 bg-gray-200 rounded-full mt-1">
+          <div
+            className={`h-3 rounded-full ${getProgressColor(
+              (totalSize / MAX_STORAGE) * 100
+            )}`}
+            style={{ width: `${(totalSize / MAX_STORAGE) * 100}%` }}
+          ></div>
+        </div>
+
+        {totalSize >= MAX_STORAGE && (
+          <p className="text-xs text-red-600 mt-1 font-medium">
+            Storage limit reached — please delete files to upload more.
+          </p>
+        )}
+      </div>
 
       {error && <div className="mb-3 text-sm text-red-700 bg-red-50 px-3 py-2 rounded">{error}</div>}
 

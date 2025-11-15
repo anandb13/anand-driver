@@ -36,11 +36,14 @@ export default function AuthForm({ mode }) {
 
   return (
     <>
-      {error && (
-        <p className="mb-4 text-sm text-red-700 bg-red-50 px-3 py-2 rounded">
-          {error}
-        </p>
-      )}
+      {/* reserve vertical space to avoid layout shift when an error appears */}
+      <div className="mb-4 min-h-[36px]">
+        {error ? (
+          <p role="alert" className="text-sm text-red-700 bg-red-50 px-3 py-2 rounded">
+            {error}
+          </p>
+        ) : null}
+      </div>
 
       <form onSubmit={submit} className="space-y-4">
         {["email", "password"].map((field) => (

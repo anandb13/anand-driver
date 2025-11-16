@@ -39,7 +39,17 @@ exports.emailFileAttachment = onCall(
       from: "Anand Drive <hello@resend.dev>",
       to: userEmail,
       subject: `Your file: ${fileName}`,
-      html: `<p>Your file <strong>${fileName}</strong> is attached.</p>`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color:#222; line-height: 1.5;">
+          <p>Hello,</p>
+          <p>Your file <strong>${fileName}</strong> from <em>Anand Drive</em> is attached to this email.</p>
+          <p>If this request wasn’t made by you, you can safely ignore this message.</p>
+          <br/>
+          <p>Regards,<br/>Anand Drive Support</p>
+          <hr/>
+          <small>This is an automated message but monitored for abuse.</small>
+        </div>
+      `,
       attachments: [{ filename: fileName, content: base64 }],
     });
 

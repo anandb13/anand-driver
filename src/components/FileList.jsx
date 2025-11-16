@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { auth, storage } from "../firebase";
 import { ref, listAll, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../firebase";
 
 function FileList({ onStorageUpdate, MAX_STORAGE }) {
   const [files, setFiles] = useState([]);
@@ -79,6 +81,22 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
     }
   };
 
+  const sendToEmail = async (file) => {
+    try {
+      const sendEmail = httpsCallable(functions, "emailFileAttachment");
+
+      await sendEmail({
+        fullPath: file.fullPath,
+        fileName: file.name,
+      });
+
+      alert(`Sent ${file.name} to your email!`);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send email.");
+    }
+  };
+
   const formatBytes = (bytes) => {
     if (bytes === 0) return "0 MB";
     const units = ["Bytes", "KB", "MB", "GB", "TB"];
@@ -141,29 +159,38 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
           <li key={idx} className="flex items-center justify-between p-2">
             <p className="text-sm cursor-default text-indigo-600 truncate">{f.name}</p>
 
-            <div className="flex items-center gap-2">
-              <a
-                href={f.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-600 ml-3 px-2 py-1 hover:bg-gray-100 rounded inline-flex items-center"
-                aria-label={`Open ${f.name}`}
-                title={`Open ${f.name}`}
-              >
-                <img src="/download.svg" alt="" className="w-5 h-5" />
-              </a>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => sendToEmail(f)}
+                  className="text-sm text-gray-600 px-2 py-1 hover:bg-gray-100 rounded inline-flex items-center"
+                  title="Email File"
+                >
+                  <img src="/email.svg" alt="Email" className="w-5 h-5" />
+                </button>
 
-              <button
-                type="button"
-                onClick={() => handleDelete(f)}
-                disabled={!!deleting[f.name]}
-                aria-label={`Delete ${f.name}`}
-                title={`Delete ${f.name}`}
-                className="text-sm text-red-600 px-2 py-1 hover:bg-red-50 rounded inline-flex items-center"
-              >
-                <img src="/delete-red.svg" alt="" className="w-5 h-5" />
-              </button>
-            </div>
+                <a
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-600 px-2 py-1 hover:bg-gray-100 rounded inline-flex items-center"
+                  aria-label={`Open ${f.name}`}
+                  title={`Open ${f.name}`}
+                >
+                  <img src="/download.svg" alt="Download" className="w-5 h-5" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => handleDelete(f)}
+                  disabled={!!deleting[f.name]}
+                  aria-label={`Delete ${f.name}`}
+                  title={`Delete ${f.name}`}
+                  className="text-sm text-red-600 px-2 py-1 hover:bg-red-50 rounded inline-flex items-center"
+                >
+                  <img src="/delete-red.svg" alt="Delete" className="w-5 h-5" />
+                </button>
+              </div>
+
           </li>
         ))}
       </ul>

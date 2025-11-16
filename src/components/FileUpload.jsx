@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { storage, auth } from "../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
@@ -80,6 +80,12 @@ function FileUpload({ totalSize, MAX_STORAGE, onUploadFinished }) {
     const dtFiles = e.dataTransfer?.files;
     handleFiles(dtFiles);
   };
+
+  useEffect(() => {
+    if (!success) return;
+    const t = setTimeout(() => setSuccess(""), 3000);
+    return () => clearTimeout(t);
+  }, [success]);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm w-full max-w-md">

@@ -3,12 +3,16 @@ import { auth, storage } from "../firebase";
 import { ref, listAll, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
+import ConfirmationModal from "./Modal";
 
 function FileList({ onStorageUpdate, MAX_STORAGE }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState({});
+  const [sending, setSending] = useState({});
+  const [confirm, setConfirm] = useState({ open: false, type: null, file: null });
+  const [processing, setProcessing] = useState(false);
   const [totalSize, setTotalSize] = useState(0);
 
   const getProgressColor = (percentage) => {
@@ -61,7 +65,7 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
   };
 
   const handleDelete = async (file) => {
-    if (!window.confirm(`Delete "${file.name}"? This cannot be undone.`)) return;
+    // now driven by confirmation modal; this function performs the delete
     if (!auth.currentUser) return setError("Not authenticated.");
 
     setDeleting((s) => ({ ...s, [file.name]: true }));
@@ -82,18 +86,44 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
   };
 
   const sendToEmail = async (file) => {
+    setError("");
+    if (!auth.currentUser) return setError("You must be signed in to email files.");
+    setSending((s) => ({ ...s, [file.name]: true }));
     try {
       const sendEmail = httpsCallable(functions, "emailFileAttachment");
-
       await sendEmail({
         fullPath: file.fullPath,
         fileName: file.name,
       });
-
-      alert(`Sent ${file.name} to your email!`);
+      // minimal success feedback
+      window.dispatchEvent(new CustomEvent("notify", { detail: { type: "success", message: `Sent ${file.name} to your email.` } }));
     } catch (err) {
-      console.error(err);
-      alert("Failed to send email.");
+      console.error("sendToEmail error:", err);
+      setError(err?.message || "Failed to send email.");
+    } finally {
+      setSending((s) => ({ ...s, [file.name]: false }));
+    }
+  };
+
+  const openConfirm = (type, file) => {
+    setConfirm({ open: true, type, file });
+  };
+
+  const closeConfirm = () => setConfirm({ open: false, type: null, file: null });
+
+  const handleConfirm = async () => {
+    const { type, file } = confirm;
+    if (!file || !type) return closeConfirm();
+    setProcessing(true);
+    try {
+      if (type === "delete") {
+        await handleDelete(file);
+      } else if (type === "email") {
+        await sendToEmail(file);
+      }
+    } finally {
+      setProcessing(false);
+      closeConfirm();
     }
   };
 
@@ -115,6 +145,19 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm w-full max-w-lg">
+      <ConfirmationModal
+        open={confirm.open}
+        title={confirm.type === "delete" ? "Delete file" : "Send file by email"}
+        message={
+          confirm.type === "delete"
+            ? `Delete "${confirm.file?.name}"? This cannot be undone.`
+            : `Send "${confirm.file?.name}" to your registered email?`
+        }
+        confirmLabel={confirm.type === "delete" ? "Delete" : "Send"}
+        onConfirm={handleConfirm}
+        onCancel={closeConfirm}
+        loading={processing || (!!confirm.file && (deleting[confirm.file.name] || sending[confirm.file.name]))}
+      />
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-medium text-gray-800">Your files</h3>
         <button
@@ -161,7 +204,7 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
 
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => sendToEmail(f)}
+                  onClick={() => openConfirm("email", f)}
                   className="text-sm text-gray-600 px-2 py-1 hover:bg-gray-100 rounded inline-flex items-center"
                   title="Email File"
                 >
@@ -180,15 +223,15 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
                 </a>
 
                 <button
-                  type="button"
-                  onClick={() => handleDelete(f)}
-                  disabled={!!deleting[f.name]}
-                  aria-label={`Delete ${f.name}`}
-                  title={`Delete ${f.name}`}
-                  className="text-sm text-red-600 px-2 py-1 hover:bg-red-50 rounded inline-flex items-center"
-                >
-                  <img src="/delete-red.svg" alt="Delete" className="w-5 h-5" />
-                </button>
+                   type="button"
+                   onClick={() => openConfirm("delete", f)}
+                   disabled={!!deleting[f.name]}
+                   aria-label={`Delete ${f.name}`}
+                   title={`Delete ${f.name}`}
+                   className="text-sm text-red-600 px-2 py-1 hover:bg-red-50 rounded inline-flex items-center"
+                 >
+                   <img src="/delete-red.svg" alt="Delete" className="w-5 h-5" />
+                 </button>
               </div>
 
           </li>

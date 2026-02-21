@@ -4,6 +4,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import Auth from "./components/auth/Auth";
 import FileUpload from "./components/FileUpload";
 import FileList from "./components/FileList";
+import useAutoLogout from "./hooks/useAutoLogout";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -26,6 +27,7 @@ function App() {
       setSigningOut(false);
     }
   };
+  useAutoLogout(user, handleLogout);
 
   return (
     <div className="min-h-screen bg-gray-50">

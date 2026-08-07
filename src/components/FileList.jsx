@@ -49,7 +49,13 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
         })
       );
 
-      setFiles(fileList);
+      const sortedFiles = fileList.sort((a, b) => {
+        const aTime = a.updated ? new Date(a.updated).getTime() : 0;
+        const bTime = b.updated ? new Date(b.updated).getTime() : 0;
+        return bTime - aTime;
+      });
+
+      setFiles(sortedFiles);
       setTotalSize(total);
       if (onStorageUpdate) {
         onStorageUpdate(total);
@@ -199,40 +205,42 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
 
       <ul className="space-y-2">
         {files.map((f, idx) => (
-          <li key={idx} className="flex items-center justify-between p-2">
-            <p className="text-sm cursor-default text-indigo-600 truncate">{f.name}</p>
+          <li key={idx} className="flex items-center justify-between p-2 gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm cursor-default text-indigo-600 truncate">{f.name}</p>
+            </div>
 
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => openConfirm("email", f)}
-                  className="text-sm text-gray-600 px-2 py-1 hover:bg-gray-100 rounded inline-flex items-center"
-                  title="Email File"
-                >
-                  <img src="/email.svg" alt="Email" className="w-5 h-5" />
-                </button>
+            <div className="flex flex-none items-center space-x-2">
+              <button
+                onClick={() => openConfirm("email", f)}
+                className="text-sm text-gray-600 px-2 py-1 hover:bg-gray-100 rounded inline-flex items-center"
+                title="Email File"
+              >
+                <img src="/email.svg" alt="Email" className="w-5 h-5" />
+              </button>
 
-                <a
-                  href={f.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-gray-600 px-2 py-1 hover:bg-gray-100 rounded inline-flex items-center"
-                  aria-label={`Open ${f.name}`}
-                  title={`Open ${f.name}`}
-                >
-                  <img src="/download.svg" alt="Download" className="w-5 h-5" />
-                </a>
+              <a
+                href={f.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-600 px-2 py-1 hover:bg-gray-100 rounded inline-flex items-center"
+                aria-label={`Open ${f.name}`}
+                title={`Download ${f.name}`}
+              >
+                <img src="/download.svg" alt="Download" className="w-5 h-5" />
+              </a>
 
-                <button
-                   type="button"
-                   onClick={() => openConfirm("delete", f)}
-                   disabled={!!deleting[f.name]}
-                   aria-label={`Delete ${f.name}`}
-                   title={`Delete ${f.name}`}
-                   className="text-sm text-red-600 px-2 py-1 hover:bg-red-50 rounded inline-flex items-center"
-                 >
-                   <img src="/delete-red.svg" alt="Delete" className="w-5 h-5" />
-                 </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => openConfirm("delete", f)}
+                disabled={!!deleting[f.name]}
+                aria-label={`Delete ${f.name}`}
+                title={`Delete ${f.name}`}
+                className="text-sm text-red-600 px-2 py-1 hover:bg-red-50 rounded inline-flex items-center"
+              >
+                <img src="/delete-red.svg" alt="Delete" className="w-5 h-5" />
+              </button>
+            </div>
 
           </li>
         ))}

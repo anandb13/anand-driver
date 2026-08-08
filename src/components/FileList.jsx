@@ -6,6 +6,7 @@ import { functions } from "../firebase";
 import ConfirmationModal from "./Modal";
 
 function FileList({ onStorageUpdate, MAX_STORAGE }) {
+  const PAGE_SIZE = 10;
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -14,6 +15,7 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
   const [confirm, setConfirm] = useState({ open: false, type: null, file: null });
   const [processing, setProcessing] = useState(false);
   const [totalSize, setTotalSize] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const getProgressColor = (percentage) => {
     if (percentage > 90) return "bg-red-600";
@@ -56,6 +58,7 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
       });
 
       setFiles(sortedFiles);
+      setCurrentPage(1);
       setTotalSize(total);
       if (onStorageUpdate) {
         onStorageUpdate(total);
@@ -64,6 +67,7 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
       console.error(err);
       setError("Could not load files.");
       setFiles([]);
+      setCurrentPage(1);
       setTotalSize(0);
     } finally {
       setLoading(false);
@@ -140,6 +144,12 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
     return `${(bytes / Math.pow(1024, index)).toFixed(2)} ${units[index]}`;
   };
 
+  const totalPages = Math.ceil(files.length / PAGE_SIZE);
+  const paginatedFiles = files.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   useEffect(() => {
     fetchFiles();
     const handler = () => {
@@ -204,8 +214,8 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
       {!loading && files.length === 0 && <div className="text-sm text-gray-500">No files uploaded yet.</div>}
 
       <ul className="space-y-2">
-        {files.map((f, idx) => (
-          <li key={idx} className="flex items-center justify-between p-2 gap-3">
+        {paginatedFiles.map((f) => (
+          <li key={f.fullPath} className="flex items-center justify-between p-2 gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-sm cursor-default text-indigo-600 truncate">{f.name}</p>
             </div>
@@ -245,6 +255,30 @@ function FileList({ onStorageUpdate, MAX_STORAGE }) {
           </li>
         ))}
       </ul>
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+            disabled={currentPage === 1 || loading}
+            className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-xs text-gray-500">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+            disabled={currentPage === totalPages || loading}
+            className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
